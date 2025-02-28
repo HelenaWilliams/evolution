@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.10.2/p5.js"></script>
+    <script src="https://unpkg.com/tone"></script>
+    <script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js?v=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://algorithmicmusic.online/js/create-spectrum.js"></script>
+    <script src="https://algorithmicmusic.online/js/create-waveform.js"></script>
+        <link rel="stylesheet" type="text/css" href="lib/style.css">
+    <meta charset="utf-8" />
+
+  </head>
+  <body style="background-color:rgb(200 100 0)">
+    <!--<script src="sketch.js"></script>-->
+    <script src="lib/p5.play.js"></script>
+    <script>
+
+      // Establish/resize canvas
+      let canvasWidth = window.innerWidth;
+      let canvasHeight = window.innerHeight-210;
+
+      window.addEventListener('resize', function(event){
+        canvasWidth = window.innerWidth;
+        canvasHeight = window.innerHeight - 210;
+        resizeCanvas(canvasWidth, canvasHeight);
+      });
+
+      // Vars for music
+      Tone.Transport.timeSignature = 4; //can be changed later...
+      Tone.Transport.bpm.value = 120;
+
+      let notes = ["A", "B", "C", "D", "E", "F", "G"];
+      const blue_synth = new Tone.Synth().toDestination();
+
+      // Vars for settings buttons
+      let immortals = false;
+      let spawner = false;
+      let cannibals = true;
+      let lastSpawned = Date.now();
+      let spawnList = [0, 1, 2, 3, 4, 5, 6];
+      let spawnRate = 1000;
+
+      // CSS styles
+      let buttons = {
+        "background-color" : "orange",
+        "color" : "white",
+        "height": "80px",
+        "width": "80px",
+        "margin": "2px",
+        "border-style": "hidden",
+        "border-radius" : "5px",
+        "font-family" : "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif"
+      };
+
+      let checkbox = {
+        "width": "20px",
+        "height": "20px"
+      };
+
+      let full_page = {
+        "position": "absolute",
+        "top": "0px",
+        "left": "0px",
+        "width": "100vw",
+        "height": "100vh",
+        "margin": "0",
+        "padding": "0",
+        "background": "orange",
+
+        "font-family" : "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif",
+      };
+
+      // nn.create('div')
+      //   .content(
+      //     `</br></br></br></br></br>
+      //     <div style="text-align: center; font-size: 30px; background-color: white;">Welcome to Evolution. Click below to start. </div>
+      //     </br></br></br></br></br>  
+      //     <div style="text-align: center"><button style="width: 20vw; height: 5vw; background-color: white; border-radius: 10px; font-size: 30px;">Start</button></div>`
+      //   )
+      //   .css(full_page)
+      //   .addTo('body');
+
+      nn.create('h1')
+        .content('Evolution (TESTING PLAYGROUND)')
+        .css({"font-family": "'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif", "text-align": "center", "color": "white", "background-color": "orange", "height": "50px", "align-content": "center"})
+        .addTo('body');
+
+      // Create the buttons
+      nn.create('button')
+        .content('Spawn Creature')
+        .css(buttons)
+        .addTo('body')
+        .on('click', () => spawnCreature(Math.floor(Math.random()*7), 0));
+
+      nn.create('button')
+        .content('Extinction Event')
+        .css(buttons)
+        .addTo('body')
+        .set('id', 'apoc')
+        .on('click', () => killAll());
+
+      document.write("<br><br>");
+
+      function killAll(){
+        // wipes the slate so life can restart
+        for (let i = 0; i < creatures.length; i++){
+          creatures[i].remove();
+          i--;
+        }
+      }
+
+      function preload() {
+        // prepare all creature images
+        images = [-1, -1, -1, -1, -1, -1, -1];
+        for (let j = 0; j < 7; j++){
+          let color = [-1, -1, -1, -1, -1];
+          for (let i = 0; i < 5; i++){
+            color[i] = loadImage("assets/creatures/c"+j+"/e"+i+".png");
+          }
+          images[j] = color;
+        }
+      }
+
+      function setup() {
+        // make canvas, establish groups
+        createCanvas(canvasWidth, canvasHeight);
+        creatures = new Group();
+        // spawnCreature(0, 0);
+        // spawnCreature(1, 0);
+        // spawnCreature(2, 0);
+        // spawnCreature(3, 0);
+        // spawnCreature(4, 0);
+        // spawnCreature(5, 0);
+        // spawnCreature(6, 0);
+      }
+
+      function draw() {
+        // main loop
+        background(255, 127, 0);
+        drawSprites();
+        collisions();
+        //moveCreatures();
+      }
+
+
+      function boop () {
+        synth.triggerAttackRelease("C4", "8n");
+      }
+
+      function randomCoords(isX){
+        // generates random coordinate, used all over the place
+        if(isX){
+          return(Math.floor(Math.random() * (canvasWidth - 200)) + 100);
+        }
+        else{
+          return(Math.floor(Math.random() * (canvasHeight - 200)) + 100);
+        }
+      }
+
+      function spawnCreature(color, evolution) {
+        // THE BEEG BOI - spawns in a new music creature
+        let creatureImg = images[color][evolution];
+        let creatureX = randomCoords(true);
+        let creatureY = randomCoords(false);
+
+        // bigger evolution = bigger image
+        let creature = createSprite(creatureX, creatureY);
+        creatureImg.resize(96 + 24*evolution, 0);
+        creature.addImage(creatureImg);
+
+        // create collider, store color/evolution/offset information
+        creature.setCollider("rectangle", 32 + 8*evolution, 32 + 8*evolution, 32 + 8*evolution, 32 + 8*evolution);
+        creature.color = color;
+        creature.evolution = evolution;
+        creature.offset = 16;
+
+        // assign music
+        let note = notes[Math.floor(Math.random()*7)];
+        let octave = Math.floor(Math.random()*4) + 3;
+        blue_synth.triggerAttackRelease(note+octave, "8n");
+
+        // start moving
+        let destX = randomCoords(true);
+        let destY = randomCoords(false);
+        //creature.attractionPoint(0.4, destX, destY);
+        creature.maxSpeed = 1;
+        creature.moveTime = Date.now();
+
+        // group with other creatures
+        creatures.add(creature);
+      }
+
+      function moveCreatures(){
+        // allows all creatures to move
+        for (let i = 0; i < creatures.length; i++){
+          if (Date.now() - creatures[i].moveTime > 2000){
+            let creatureX = randomCoords(true);
+            let creatureY = randomCoords(false);
+          
+            creatures[i].attractionPoint(0.4, creatureX, creatureY);
+            creatures[i].moveTime = Date.now();
+          }
+          let offset = creatures[i].offset
+          // canvas borders
+          if (creatures[i].position.x < offset){
+            creatures[i].position.x = offset;
+          }
+          if (creatures[i].position.x > canvasWidth-offset){
+            creatures[i].position.x = canvasWidth-offset;
+          }
+          if (creatures[i].position.y < offset){
+            creatures[i].position.y = offset;
+          }
+          if (creatures[i].position.y > canvasHeight-offset){
+            creatures[i].position.y = canvasHeight-offset;
+          }
+        }
+      }
+
+      function collisions(){
+        // causes creatures to interact on touch
+        creatures.overlap(creatures, fight);
+      }
+
+      function fight(c1, c2){
+        // creatures fight, winner evolves
+        if(!immortals){
+          if(!cannibals && c1.color != c2.color || cannibals ){
+            if(c1.evolution == c2.evolution) { // evenly matched
+              if(Math.random() > 0.5){ // c1 wins
+                evolve(c1);
+                c2.remove();
+              }
+              else { // c2 wins
+                evolve(c2);
+                c1.remove();
+              }
+            }
+            else if(c1.evolution > c2.evolution){
+              evolve(c1);
+              c2.remove();
+            }
+            else {
+              evolve(c2);
+              c1.remove();          
+            }
+          }
+          
+        }
+      }
+
+      function evolve(creature){
+        // creature reaches next evolution, grows collider/loses speed to match
+        if (creature.evolution < 4){
+          creature.evolution = creature.evolution + 1;
+          let creatureImg = images[creature.color][creature.evolution];
+          creatureImg.resize(96 + 24*creature.evolution, 0);
+          creature.addImage(creatureImg);
+          creature.setCollider("rectangle", 32 + 6*creature.evolution, 32 + 6*creature.evolution, 32 + 12*creature.evolution, 32 + 12*creature.evolution);
+          creature.maxSpeed *= 0.75;
+          creature.offset *= 1.5;
+        }
+      }
+    </script>
+  </body>
+</html>
