@@ -1,0 +1,25 @@
+<body></body>
+<script src="https://unpkg.com/tone"></script>
+<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js?v=1"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://algorithmicmusic.online/js/create-spectrum.js"></script>
+<script src="https://algorithmicmusic.online/js/create-waveform.js"></script>
+<script>
+
+Tone.Transport.timeSignature = 4;
+Tone.Transport.bpm = 120;
+// Tone.Transport.loop = true;
+// Tone.Transport.loopStart = 0;
+// Tone.Transport.loopEnd = 8;
+Tone.Transport.start();
+
+const synth = new Tone.Synth().toDestination();
+const effect = new Tone.Reverb().toDestination();
+
+var loop = new Tone.Loop(function(time){
+	synth.triggerAttackRelease("C4", "1n", time);
+}, "8n").start(0);
+
+Tone.Transport.start();
+
+</script>
