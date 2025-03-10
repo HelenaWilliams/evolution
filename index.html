@@ -10,6 +10,7 @@
     <script src="lib/classical-instruments.js"></script>
     <script src="lib/rock-instruments.js"></script>
     <script src="lib/electronic-instruments.js"></script>
+    <script src="lib/instrument-maker.js"></script>
     <link rel="stylesheet" type="text/css" href="lib/style.css">
     <meta charset="utf-8" />
 
@@ -428,6 +429,13 @@
         creature.octave = [Math.floor(Math.random()*2) + 3];
         creature.pattern = [[Math.floor((Math.random()*4)/3), Math.floor((Math.random()*4)/3), Math.floor((Math.random()*4)/3), Math.floor((Math.random()*4)/3)]];
         creature.durations = [[durations[Math.floor(Math.random()*3)], durations[Math.floor(Math.random()*3)], durations[Math.floor(Math.random()*3)], durations[Math.floor(Math.random()*3)]]];
+        creature.instruments = {
+          "rockband": {...instruments["rockband"][creature.color]},
+          "orchestra": {...instruments["orchestra"][creature.color]},
+          "electronic": {...instruments["electronic"][creature.color]},
+          "chaos": {...instruments["chaos"][creature.color]}
+        }
+        console.log(creature.instruments);
         // note durations: 1/2, 1/4, 1/8
 
         if(universe == "original"){
