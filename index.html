@@ -120,7 +120,7 @@
           <div style="text-align: center; font-size: 50px; background-color: white; color: gray;">Welcome to Evolution. Click below to start. </div>
           </br></br></br></br></br></br></br></br></br></br></br></br></br> 
           <div style="text-align: center">
-              <button style="padding: 20px; width: 20%; background-color: white; font-size: 40px; color: gray; border-color: gray; border-style: groove; pointer-events: auto;" onclick="startup();">Start</button></div>`
+              <button style="padding: 20px; width: 20%; background-color: white; font-size: 3vw; color: gray; border-color: gray; border-style: groove; pointer-events: auto;" onclick="startup();">Start</button></div>`
         )
         .css(full_page)
         .set('id', 'startScreen')
@@ -377,6 +377,8 @@
         createCanvas(canvasWidth, canvasHeight);
         creatures = new Group();
         new Tone.Loop(playMusic, '0.25').start();
+        let testInst = makeInstrument("electronic", 0).toDestination();
+        testInst.triggerAttackRelease("C4", 0.25);
       }
 
       function draw() {
